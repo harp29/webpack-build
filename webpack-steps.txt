@@ -1,0 +1,396 @@
+STEPS:
+
+* ALWAYS VIEW DOCUMENTATION*
+
+1) globally install webpack in the project to use webpack related commands in the console
+2) install webpack and save as dev
+3) module.exports: takes entry and output files
+
+   var webpackConfig = {
+     entry: 'index.js',
+     output: {
+       path: path.resolve(__dirname, './dist'),
+       filename: 'index_bundle.js'
+     }
+   };
+
+
+
+4) npm install html-webpack-plugin --save-dev
+
+   - The plugin will generate an HTML5 file for you that includes all
+     your webpack bundles in the body using script tags. Whichever type - .pug, .ejs, and etc
+     will become .html in the dist or any folder you are using for distribution
+
+     include in webpack.config.js:
+     var HtmlWebpackPlugin = require('html-webpack-plugin');
+
+     Usage:
+     plugins: [new HtmlWebpackPlugin({
+        can pass in an object which has values title, template and etc that can be used
+        the template is the one we use:
+
+        template: './src/index.ejs'
+
+        minify and collapse white space
+        minify: {
+            collapseWhiteSpace: true
+        }
+
+        hash on js and css files:
+        hash: true
+     })]
+
+
+   5) Install webpack dev server: npm install webpack-dev-server --save-dev. This only runs via memory
+      - creates a localhost:8080 connection for us
+      - development server provides live reloading. This should be used for development only.
+      - have to install in globally to use within cmd line but not a good idea can interfer with other projects
+        so access via ./node_modules/.bin/webpack-dev-server
+
+        ERROR when running webpack-dev-server or the above: ./node_modules/.bin/webpack-dev-server
+        error resolved when installed webpack > 4.2.0 and webpack-cli globally
+
+        DOES NOT CREATE FILES TO DIST should use dev or prod to create the files to dist
+
+        options for webpack-dev-server
+        devServer: {
+            contentBase: path.join(__dirname, "/dist"),
+            compress: true,
+            port: 3000,
+            hot: true, // without whole page reloads, with only certain code that is being changed will reload
+            stats: "errors-only" many others: verbose for production
+        },
+
+        to make HOT: true.. work we need to at the top of the webpack.config.js and include webpack:
+        var webpack = require('webpack')
+
+        in plugins:
+        plugins: [
+                new htmlWebpackPlugin({
+                    title: 'Webpack template html only',
+                    template: './src/index.ejs',
+                    minify: {
+                        collapseWhitespace: true
+                    },
+                    hash: true
+                }),
+                new webpack.HotModuleReplacementPlugin(),
+                also: new webpack.NamedModulesPlugin() - display relative path of a module when HMR is enabled
+            ]
+
+   6) Loaders - basically helpers to read/work with file types - sass, es6, and etc. Webpack only reads JavaScript
+                so have to transform those dependencies into modules.
+                Purposes:  identify which file should be transformed and what loader to use to transform: test
+
+
+                usages:
+
+                module: {
+                    rules: [
+                        loaders here
+                        {
+                            test: /\.txt/,
+                            use: 'raw-loader'
+                        }
+                    ]
+                }
+
+
+   7) babel: npm install babel-loader babel-core -D
+              npm install babel-preset-es-2015 for react but add it just incase
+              create new file: .babelrc and include
+              {
+                 "presets": ["es2015"]
+              }
+
+      babel automatically convert all js files and bundle them to together so must exclude node_modules from babel run
+
+        {
+            test: /\.js$/,
+            exclude: /node_modules/,
+            use: 'babel-loader'
+        }
+
+        GLSL LOADERS ARE AVAILABLE TOO
+        XML
+
+   8) Stylesheets:
+        npm install style-loader css-loader -D
+        npm install sass-loader node-sass -D
+        node-sass is css compiler
+
+        {
+            test: /\.css$/,
+            use: [
+                    { loader: "style-loader" },
+                    { loader: "css-loader" }
+                 ]
+
+        }
+
+        if no options/configuration:
+        {
+                    test: /\.css$/,
+                    use: [
+                            "style-loader" , "css-loader"
+
+                         ]
+
+                }
+
+        {
+            test: /\.scss$/,
+            use: ["style-loader", "css-loader", "sass-loader"]
+        }
+
+   9) Extract css to its own bundle for production and not be within js file
+       npm install extract-text-webpack-plugin -D
+
+       require:
+       var ExtractTextPlugin = require('extract-text-webpack-plugin');
+
+       error:
+       /Users/harpreetsingh/Desktop/front-end training/webpack-packt-udemy-2018-self/node_modules/schema-utils/dist/validateOptions.js:44
+           throw new _ValidationError2.default(ajv.errors, name);
+           ^
+
+       ValidationError: Extract Text Plugin (Loader) Invalid Options
+
+        change to fallback and use
+
+       usage:
+       {
+                       test: /\.scss$/,
+                       use: ExtractTextPlugin.extract({
+                           fallback: 'style-loader',
+                           use: [
+                               'css-loader', 'sass-loader'
+                           ],
+                           publicPath: '/dist'
+                       })
+                   }
+
+       in plugins:
+       plugins: [
+               new htmlWebpackPlugin({
+                   title: 'Webpack template html only',
+                   template: './src/index.ejs',
+                   minify: {
+                       collapseWhitespace: true
+                   },
+                   hash: true
+               }),
+               new webpack.HotModuleReplacementPlugin(),
+               new webpack.NamedModulesPlugin(),
+               new ExtractTextPlugin({
+                           filename: 'app.css',
+                           disable: false,
+                           allChunks: true
+                       })
+           ]
+
+           BUT doesn't work with HMR... so use hmr when developing and extract-text-webpack-plugin in production mode:
+
+            {
+                           test: /\.scss$/,
+                           use: [
+                               "style-loader",
+                               "css-loader",
+                               "sass-loader"
+                           ]
+                       }
+
+
+   10) images: file-loader: load files - to use
+        npm install file-loader -D
+
+        optimize images: npm install image-webpack-loader -D
+
+        usage:
+
+        {
+                        test: /\.(jpe?g|png|gif|svg)$/i,
+                        use: ['file-loader?name=[name].[ext]&outputPath=/images/',
+                                'image-webpack-loader'
+                             ]
+                    }
+
+
+        adding options: read docs https://github.com/tcoopman/image-webpack-loader
+        {
+                        test: /\.(jpe?g|png|gif|svg)$/i,
+                        use: ['file-loader?name=[name].[ext]&outputPath=/images/',
+                                {
+                                    use: 'image-webpack-loader',
+                                    query: {
+                                        progress
+                                    }
+                                }
+                             ]
+                    }
+
+
+        TO HAVE IMAGES WORKING FOR PRODUCTION:
+        {
+                        test: /\.(jpe?g|png|gif|svg)$/i,
+                        use: ['file-loader?name=[name].[ext]&outputPath=images/&publicPath=images/',
+                                'image-webpack-loader'
+                             ]
+                    }
+
+        publicPath is needed - html file doesn't know where the file(image) is saved
+
+   11) public path: used for cdn
+
+        const ASSET_PATH = process.env.ASSET_PATH || '/';
+
+            module.exports = {
+                entry: './src/app.js',
+                output: {
+                    path: path.resolve(__dirname, 'dist'),
+                    filename: 'app.bundle.js',
+                    publicPath: ASSET_PATH
+                }
+            }
+
+            in plugins:
+            new webpack.DefinePlugin({
+
+                'process.env.ASSET_PATH': JSON.stringify(ASSET_PATH)
+
+            })
+
+            go to terminal:
+
+   12) Code splitting - separate bundles and multiple templates
+        entry: {
+                index: './src/app.js',
+                about: './src/about.js'
+            },
+            output: {
+                path: path.resolve(__dirname, 'dist'),
+                filename: '[name].bundle.js',
+                publicPath: ASSET_PATH
+            },
+
+             new htmlWebpackPlugin({
+                         title: 'Webpack template html only',
+                         template: './src/index.html',
+                         minify: {
+                             collapseWhitespace: true
+                         },
+                         hash: true,
+                         excludeChunks: ['about']
+                     }),
+                     new htmlWebpackPlugin({
+                         title: 'about',
+                         template: './src/about.html',
+                         filename: 'about.html',
+                         minify: {
+                             collapseWhitespace: true
+                         },
+                         hash: true,
+                         chunks: ['about']
+                     }),
+
+
+
+   13) rimraf - delete current files/folders and rebuild. For production version:
+       npm install rimraf -D
+       package.json:
+       prod: "rimraf ./dist/* && webpack -p"
+
+
+   14) production and development environments:
+       Few ways.
+       first way:
+
+        Package.json
+        "scripts": {
+            "killallProcesses": "killall node && webpack-dev-server",
+            "start": "webpack-dev-server",
+            "dev": "webpack -d",
+            "prod": "npm run clean && NODE_ENV=production webpack -p", <--- returns true or false
+            "clean": "rimraf ./dist/* "
+          },
+
+          webpack.config.js
+          var isProd = process.env.NODE_ENV === 'production' //returns true or false
+
+          var to hold css style loaders - this is for dev mode so we can use HMR
+          var cssDev = ['style-loader', 'css-loader', 'sass-loader']
+
+          // now no issues with HMR
+          var cssProd = ExtractTextPlugin.extract({
+                                            fallback: 'style-loader',
+                                            use: [
+                                                'css-loader', 'sass-loader'
+                                            ],
+                                            publicPath: '/dist'})
+
+
+          check if production is true and according to that use that css environment
+          var cssConfig = isProd ? cssProd : cssDev
+
+          {
+                          test: /\.scss$/,
+                          use: cssConfig
+                      },
+
+          new ExtractTextPlugin({
+                      filename: 'app.css',
+                      disable: !isProduction, <-- be disabled in developer mode
+                      allChunks: true
+                  }),
+
+        15) pug
+            npm install pug pug-html-loader -D
+
+            webpack.config.js:
+            {
+                            test: /\.pug$/,
+                            use: ['html-loader', 'pug-html-loader']
+                        },
+
+            to change content while developing:
+            require('./index.pug'); in js file linked to it
+
+        16) vendor bundle - code splitting:
+        const VENDOR_LIBS =['gsap'];
+
+        var cssConfig = isProd ? cssProd : cssDev;
+
+        module.exports = {
+            entry: {
+                index: './src/app.js',
+                about: './src/about.js',
+                vendor: VENDOR_LIBS <--- just have another entry file
+            },
+            output: {
+                path: path.resolve(__dirname, 'dist'),
+                filename: '[name].js'
+            },
+
+   17) hashing files
+        entry: {
+                index: './src/app.js',
+                about: './src/about.js',
+                vendor: VENDOR_LIBS
+            },
+            output: {
+                path: path.resolve(__dirname, 'dist'),
+                filename: '[name].[hash].js' <-- adding hashes
+            },
+
+   18) get only production files from vendors - remove development files(error messages and etc)
+        new webpack.DefinePlugin({
+           'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+        })
+
+
+NPM SCRIPTS:
+
+1) dev
+2) build
+3) prod
