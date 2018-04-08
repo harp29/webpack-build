@@ -1,1 +1,1 @@
-body{background-color:#6495ed;color:gold;width:100%;height:100%;background-image:url(images/puppy.jpg)}h1{font-size:10vh;color:purple}
+@font-face{font-family:tostada;src:url(fonts/tostada.ttf)}body{background-color:#6495ed;color:gold;width:100%;height:100%;background-image:url(images/puppy.jpg);font-family:tostada}h1{font-size:10vh;color:purple}
