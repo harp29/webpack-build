@@ -60,8 +60,8 @@ module.exports = {
             {
                 test: /\.css$/,
                 use:[
-                     "style-loader" , "css-loader"
-                    ]
+                    "style-loader" , "css-loader"
+                ]
             },
             {
                 test: /\.scss$/,
@@ -74,8 +74,12 @@ module.exports = {
             {
                 test: /\.(jpe?g|png|gif|svg)$/i,
                 use: ['file-loader?name=[name].[ext]&outputPath=images/&publicPath=images/',
-                        'image-webpack-loader'
-                     ]
+                    'image-webpack-loader'
+                ]
+            },
+            {
+                test: /\.(eot|ttf|woff|woff2)(\?v=\d+\.\d+\.\d+)?$/,
+                use: 'file-loader?name=[name].[ext]&outputPath=fonts/&publicPath=fonts/'
             }
         ]
     },
